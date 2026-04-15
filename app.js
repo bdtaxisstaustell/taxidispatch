@@ -11,7 +11,7 @@ let tariff = JSON.parse(localStorage.getItem("tariff")) || {
 let drivers = [
   { name: "Driver 1", status: "Available" },
   { name: "Driver 2", status: "Available" },
-  { name: "Driver 3", status: "On Job" }
+  { name: "Driver 3", status: "Available" }
 ];
 
 function saveAll() {
@@ -19,25 +19,18 @@ function saveAll() {
   localStorage.setItem("tariff", JSON.stringify(tariff));
 }
 
-/* ---------------- BOOKING ---------------- */
+/* BOOKING */
 
 function openBooking() {
   bookingModal.style.display = "block";
-  loadDrivers();
+  driverSelect.innerHTML = drivers.map(d => `<option>${d.name}</option>`).join("");
 }
 
 function closeBooking() {
   bookingModal.style.display = "none";
 }
 
-function loadDrivers() {
-  driverSelect.innerHTML = "";
-  drivers.forEach(d => {
-    driverSelect.innerHTML += `<option>${d.name}</option>`;
-  });
-}
-
-/* ---------------- TARIFF ---------------- */
+/* TARIFF */
 
 function openTariff() {
   tariffModal.style.display = "block";
@@ -54,52 +47,46 @@ function closeTariff() {
 }
 
 function saveTariff() {
-  tariff.baseFare = parseFloat(baseFare.value);
-  tariff.rate1 = parseFloat(rate1.value);
-  tariff.rate2 = parseFloat(rate2.value);
-  tariff.rate3 = parseFloat(rate3.value);
-  tariff.nightRate = parseFloat(nightRate.value);
+  tariff.baseFare = +baseFare.value;
+  tariff.rate1 = +rate1.value;
+  tariff.rate2 = +rate2.value;
+  tariff.rate3 = +rate3.value;
+  tariff.nightRate = +nightRate.value;
 
   saveAll();
-  alert("Tariff Saved");
+  alert("Tariff saved");
 }
 
-/* ---------------- FARE ---------------- */
+/* FARE */
 
 async function calculateFare() {
 
-  let pickup = document.getElementById("pickup").value;
-  let dropoff = document.getElementById("dropoff").value;
+  let pickup = pickup.value;
+  let dropoff = dropoff.value;
 
-  let pRes = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${pickup}`);
-  let dRes = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${dropoff}`);
+  let p = (await (await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${pickup}`)).json())[0];
+  let d = (await (await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${dropoff}`)).json())[0];
 
-  let p = (await pRes.json())[0];
-  let d = (await dRes.json())[0];
-
-  let routeRes = await fetch(
+  let route = await (await fetch(
     `https://router.project-osrm.org/route/v1/driving/${p.lon},${p.lat};${d.lon},${d.lat}?overview=false`
-  );
+  )).json();
 
-  let route = await routeRes.json();
   let miles = route.routes[0].distance / 1609;
 
   let fare = calculateTariff(miles);
 
-  document.getElementById("fare").value =
-    `£${fare.toFixed(2)} (${miles.toFixed(2)} miles)`;
+  document.getElementById("fare").value = `£${fare.toFixed(2)} (${miles.toFixed(2)} mi)`;
 }
 
 function calculateTariff(distance) {
-
   let fare = tariff.baseFare;
 
   if (distance <= 1) {
     fare += distance * tariff.rate1;
   } else if (distance <= 3) {
-    fare += (1 * tariff.rate1) + ((distance - 1) * tariff.rate2);
+    fare += tariff.rate1 + (distance - 1) * tariff.rate2;
   } else {
-    fare += (1 * tariff.rate1) + (2 * tariff.rate2) + ((distance - 3) * tariff.rate3);
+    fare += tariff.rate1 + 2 * tariff.rate2 + (distance - 3) * tariff.rate3;
   }
 
   let hour = new Date().getHours();
@@ -110,7 +97,7 @@ function calculateTariff(distance) {
   return fare;
 }
 
-/* ---------------- BOOKINGS ---------------- */
+/* BOOKINGS */
 
 function addBooking() {
   bookings.push({
@@ -121,6 +108,7 @@ function addBooking() {
     dropoff: dropoff.value,
     fare: fare.value,
     driver: driverSelect.value,
+    date: date.value,
     status: "Pending"
   });
 
@@ -129,10 +117,17 @@ function addBooking() {
   closeBooking();
 }
 
-function display() {
+function display(filter = "all") {
   bookingTable.innerHTML = "";
 
-  bookings.forEach(b => {
+  let today = new Date().toISOString().split("T")[0];
+
+  bookings.filter(b => {
+    if (filter === "today") return b.date === today;
+    if (filter === "future") return b.date > today;
+    if (filter === "completed") return b.status === "Completed";
+    return true;
+  }).forEach(b => {
     bookingTable.innerHTML += `
       <tr>
         <td>${b.name}</td>
@@ -142,6 +137,7 @@ function display() {
         <td>${b.fare}</td>
         <td>${b.status}</td>
         <td>${b.driver}</td>
+        <td>${b.date}</td>
         <td>
           <button onclick="dispatch(${b.id})">Dispatch</button>
           <button onclick="complete(${b.id})">Complete</button>
@@ -154,9 +150,17 @@ function display() {
   updateDrivers();
 }
 
+function filterJobs(type) {
+  display(type);
+}
+
 function dispatch(id) {
   let b = bookings.find(x => x.id === id);
   b.status = "Dispatched";
+
+  let driver = drivers.find(d => d.name === b.driver);
+  if (driver) driver.status = "On Job";
+
   saveAll();
   display();
 }
@@ -164,6 +168,10 @@ function dispatch(id) {
 function complete(id) {
   let b = bookings.find(x => x.id === id);
   b.status = "Completed";
+
+  let driver = drivers.find(d => d.name === b.driver);
+  if (driver) driver.status = "Available";
+
   saveAll();
   display();
 }
@@ -174,36 +182,33 @@ function remove(id) {
   display();
 }
 
-/* ---------------- SEARCH ---------------- */
+/* SEARCH */
 
 function searchCustomer() {
   let val = searchPhone.value;
-
   let filtered = bookings.filter(b => b.phone.includes(val));
 
-  bookingTable.innerHTML = "";
-  filtered.forEach(b => {
-    bookingTable.innerHTML += `
-      <tr>
-        <td>${b.name}</td>
-        <td>${b.phone}</td>
-        <td>${b.pickup}</td>
-        <td>${b.dropoff}</td>
-        <td>${b.fare}</td>
-        <td>${b.status}</td>
-        <td>${b.driver}</td>
-        <td></td>
-      </tr>
-    `;
-  });
+  bookingTable.innerHTML = filtered.map(b => `
+    <tr>
+      <td>${b.name}</td>
+      <td>${b.phone}</td>
+      <td>${b.pickup}</td>
+      <td>${b.dropoff}</td>
+      <td>${b.fare}</td>
+      <td>${b.status}</td>
+      <td>${b.driver}</td>
+      <td>${b.date}</td>
+      <td></td>
+    </tr>
+  `).join("");
 }
 
-/* ---------------- DRIVER PANEL ---------------- */
+/* DRIVER PANEL */
 
 function updateDrivers() {
-  drivers.innerHTML = drivers.length;
-  availableDrivers.innerHTML = drivers.filter(d => d.status === "Available").length;
-  onJobDrivers.innerHTML = drivers.filter(d => d.status === "On Job").length;
+  driversCount.innerHTML = drivers.length;
+  availableCount.innerHTML = drivers.filter(d => d.status === "Available").length;
+  onJobCount.innerHTML = drivers.filter(d => d.status === "On Job").length;
 }
 
 display();
