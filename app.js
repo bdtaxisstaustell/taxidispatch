@@ -23,15 +23,70 @@ function loadDrivers() {
   let select = document.getElementById("driverSelect");
   select.innerHTML = "";
   drivers.forEach(d => {
-    let option = `<option value="${d.name}">${d.name}</option>`;
-    select.innerHTML += option;
+    select.innerHTML += `<option>${d.name}</option>`;
   });
 }
 
-function calculateFare() {
-  let d = document.getElementById("distance").value;
-  let fare = 5 + (d * 2); // base + per mile
-  document.getElementById("fare").value = "£" + fare.toFixed(2);
+async function calculateFare() {
+  let pickup = document.getElementById("pickup").value;
+  let dropoff = document.getElementById("dropoff").value;
+
+  if (!pickup || !dropoff) {
+    alert("Enter pickup and dropoff");
+    return;
+  }
+
+  try {
+    let pRes = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${pickup}`);
+    let dRes = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${dropoff}`);
+
+    let pData = await pRes.json();
+    let dData = await dRes.json();
+
+    if (!pData.length || !dData.length) {
+      alert("Location not found");
+      return;
+    }
+
+    let p1 = pData[0];
+    let p2 = dData[0];
+
+    let routeRes = await fetch(
+      `https://router.project-osrm.org/route/v1/driving/${p1.lon},${p1.lat};${p2.lon},${p2.lat}?overview=false`
+    );
+
+    let routeData = await routeRes.json();
+
+    let distanceMiles = routeData.routes[0].distance / 1609;
+
+    let fare = calculateTariff(distanceMiles);
+
+    document.getElementById("fare").value =
+      `£${fare.toFixed(2)} (${distanceMiles.toFixed(2)} miles)`;
+
+  } catch (err) {
+    alert("Error calculating fare");
+  }
+}
+
+function calculateTariff(distance) {
+  let baseFare = 5;
+  let fare = baseFare;
+
+  if (distance <= 1) {
+    fare += distance * 3;
+  } else if (distance <= 3) {
+    fare += (1 * 3) + ((distance - 1) * 2.5);
+  } else {
+    fare += (1 * 3) + (2 * 2.5) + ((distance - 3) * 2);
+  }
+
+  let hour = new Date().getHours();
+  if (hour >= 22 || hour < 6) {
+    fare *= 1.3;
+  }
+
+  return fare;
 }
 
 function addBooking() {
@@ -39,7 +94,6 @@ function addBooking() {
     id: Date.now(),
     name: name.value,
     phone: phone.value,
-    email: email.value,
     pickup: pickup.value,
     dropoff: dropoff.value,
     fare: fare.value,
@@ -107,27 +161,29 @@ function searchCustomer() {
   table.innerHTML = "";
 
   filtered.forEach(b => {
-    table.innerHTML += `<tr>
-      <td>${b.name}</td>
-      <td>${b.phone}</td>
-      <td>${b.pickup}</td>
-      <td>${b.dropoff}</td>
-      <td>${b.fare}</td>
-      <td>${b.status}</td>
-      <td>${b.driver}</td>
-      <td></td>
-    </tr>`;
+    table.innerHTML += `
+      <tr>
+        <td>${b.name}</td>
+        <td>${b.phone}</td>
+        <td>${b.pickup}</td>
+        <td>${b.dropoff}</td>
+        <td>${b.fare}</td>
+        <td>${b.status}</td>
+        <td>${b.driver}</td>
+        <td></td>
+      </tr>
+    `;
   });
 }
 
 function updateDriverPanels() {
-  let onboard = document.getElementById("drivers");
-  let available = document.getElementById("availableDrivers");
-  let onjob = document.getElementById("onJobDrivers");
+  driversDiv = document.getElementById("drivers");
+  availableDiv = document.getElementById("availableDrivers");
+  onJobDiv = document.getElementById("onJobDrivers");
 
-  onboard.innerHTML = drivers.length;
-  available.innerHTML = drivers.filter(d => d.status === "Available").length;
-  onjob.innerHTML = drivers.filter(d => d.status === "On Job").length;
+  driversDiv.innerHTML = drivers.length;
+  availableDiv.innerHTML = drivers.filter(d => d.status === "Available").length;
+  onJobDiv.innerHTML = drivers.filter(d => d.status === "On Job").length;
 }
 
 display();
