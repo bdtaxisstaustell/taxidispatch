@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Taxi Dispatch System</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<h1>Taxi Dispatch System</h1>
+
+<div class="form">
+  <h2>New Booking</h2>
+
+  <input type="text" id="name" placeholder="Customer Name">
+  <input type="text" id="phone" placeholder="Phone Number">
+  <input type="email" id="email" placeholder="Email">
+
+  <input type="text" id="pickup" placeholder="Pickup Location">
+  <input type="text" id="dropoff" placeholder="Dropoff Location">
+  <input type="text" id="via" placeholder="Via (optional)">
+
+  <input type="number" id="distance" placeholder="Distance (miles)">
+  <button onclick="calculateFare()">Calculate Fare</button>
+  <input type="text" id="fare" placeholder="Fare" readonly>
+
+  <input type="date" id="date">
+  <input type="time" id="time">
+
+  <button onclick="addBooking()">Add Booking</button>
+</div>
+
+<div class="search">
+  <h2>Search Customer</h2>
+  <input type="text" id="searchPhone" placeholder="Phone Number">
+  <button onclick="searchCustomer()">Search</button>
+</div>
+
+<h2>Bookings</h2>
+<table>
+  <thead>
+    <tr>
+      <th>Name</th>
+      <th>Phone</th>
+      <th>Pickup</th>
+      <th>Drop</th>
+      <th>Fare</th>
+      <th>Status</th>
+      <th>Actions</th>
+    </tr>
+  </thead>
+  <tbody id="bookingTable"></tbody>
+</table>
+
+<script src="app.js"></script>
+</body>
+</html>
