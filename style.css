@@ -5,7 +5,7 @@ body {
 }
 
 .sidebar {
-  width: 200px;
+  width: 220px;
   background: #1f2a40;
   color: white;
   padding: 15px;
@@ -32,6 +32,7 @@ body {
   background: #eee;
   padding: 10px;
   flex: 1;
+  font-weight: bold;
 }
 
 table {
@@ -43,6 +44,11 @@ table {
 th, td {
   padding: 8px;
   border: 1px solid #ddd;
+}
+
+button {
+  cursor: pointer;
+  margin: 2px;
 }
 
 .modal {
@@ -58,4 +64,10 @@ th, td {
   padding: 20px;
   width: 400px;
   margin: 50px auto;
+}
+
+input, select {
+  width: 100%;
+  margin: 5px 0;
+  padding: 8px;
 }
