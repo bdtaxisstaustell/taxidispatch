@@ -18,14 +18,13 @@
   </div>
 
   <div class="panels">
-
     <div class="panel">
       <h4>Drivers Onboard</h4>
       <div id="drivers"></div>
     </div>
 
     <div class="panel">
-      <h4>Available Drivers</h4>
+      <h4>Available</h4>
       <div id="availableDrivers"></div>
     </div>
 
@@ -33,12 +32,11 @@
       <h4>On Job</h4>
       <div id="onJobDrivers"></div>
     </div>
-
   </div>
 
   <h3>Bookings</h3>
 
-  <input type="text" id="searchPhone" placeholder="Search by phone">
+  <input id="searchPhone" placeholder="Search phone">
   <button onclick="searchCustomer()">Search</button>
 
   <table>
@@ -69,12 +67,11 @@
     <input id="phone" placeholder="Phone">
     <input id="email" placeholder="Email">
 
-    <input id="pickup" placeholder="Pickup">
-    <input id="dropoff" placeholder="Dropoff">
+    <input id="pickup" placeholder="Pickup location">
+    <input id="dropoff" placeholder="Dropoff location">
     <input id="via" placeholder="Via">
 
-    <input id="distance" placeholder="Distance (miles)">
-    <button onclick="calculateFare()">Calculate Fare</button>
+    <button onclick="calculateFare()">Auto Calculate Fare</button>
     <input id="fare" readonly placeholder="Fare">
 
     <input type="date" id="date">
