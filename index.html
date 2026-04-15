@@ -1,55 +1,92 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Taxi Dispatch System</title>
+  <title>Taxi Dispatch Pro</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-<h1>Taxi Dispatch System</h1>
-
-<div class="form">
-  <h2>New Booking</h2>
-
-  <input type="text" id="name" placeholder="Customer Name">
-  <input type="text" id="phone" placeholder="Phone Number">
-  <input type="email" id="email" placeholder="Email">
-
-  <input type="text" id="pickup" placeholder="Pickup Location">
-  <input type="text" id="dropoff" placeholder="Dropoff Location">
-  <input type="text" id="via" placeholder="Via (optional)">
-
-  <input type="number" id="distance" placeholder="Distance (miles)">
-  <button onclick="calculateFare()">Calculate Fare</button>
-  <input type="text" id="fare" placeholder="Fare" readonly>
-
-  <input type="date" id="date">
-  <input type="time" id="time">
-
-  <button onclick="addBooking()">Add Booking</button>
+<div class="sidebar">
+  <h2>Dispatch</h2>
+  <button onclick="openBooking()">+ New Booking</button>
 </div>
 
-<div class="search">
-  <h2>Search Customer</h2>
-  <input type="text" id="searchPhone" placeholder="Phone Number">
+<div class="main">
+
+  <div class="topbar">
+    <h3>Taxi Dispatch Dashboard</h3>
+  </div>
+
+  <div class="panels">
+
+    <div class="panel">
+      <h4>Drivers Onboard</h4>
+      <div id="drivers"></div>
+    </div>
+
+    <div class="panel">
+      <h4>Available Drivers</h4>
+      <div id="availableDrivers"></div>
+    </div>
+
+    <div class="panel">
+      <h4>On Job</h4>
+      <div id="onJobDrivers"></div>
+    </div>
+
+  </div>
+
+  <h3>Bookings</h3>
+
+  <input type="text" id="searchPhone" placeholder="Search by phone">
   <button onclick="searchCustomer()">Search</button>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Phone</th>
+        <th>Pickup</th>
+        <th>Drop</th>
+        <th>Fare</th>
+        <th>Status</th>
+        <th>Driver</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody id="bookingTable"></tbody>
+  </table>
+
 </div>
 
-<h2>Bookings</h2>
-<table>
-  <thead>
-    <tr>
-      <th>Name</th>
-      <th>Phone</th>
-      <th>Pickup</th>
-      <th>Drop</th>
-      <th>Fare</th>
-      <th>Status</th>
-      <th>Actions</th>
-    </tr>
-  </thead>
-  <tbody id="bookingTable"></tbody>
-</table>
+<!-- Booking Modal -->
+<div id="bookingModal" class="modal">
+  <div class="modal-content">
+
+    <h2>New Booking</h2>
+
+    <input id="name" placeholder="Customer Name">
+    <input id="phone" placeholder="Phone">
+    <input id="email" placeholder="Email">
+
+    <input id="pickup" placeholder="Pickup">
+    <input id="dropoff" placeholder="Dropoff">
+    <input id="via" placeholder="Via">
+
+    <input id="distance" placeholder="Distance (miles)">
+    <button onclick="calculateFare()">Calculate Fare</button>
+    <input id="fare" readonly placeholder="Fare">
+
+    <input type="date" id="date">
+    <input type="time" id="time">
+
+    <select id="driverSelect"></select>
+
+    <button onclick="addBooking()">Save Booking</button>
+    <button onclick="closeBooking()">Close</button>
+
+  </div>
+</div>
 
 <script src="app.js"></script>
 </body>
