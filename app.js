@@ -1,41 +1,64 @@
 let bookings = JSON.parse(localStorage.getItem("bookings")) || [];
 
-function saveData() {
+let drivers = [
+  { id: 1, name: "Driver 1", status: "Available" },
+  { id: 2, name: "Driver 2", status: "Available" },
+  { id: 3, name: "Driver 3", status: "On Job" }
+];
+
+function save() {
   localStorage.setItem("bookings", JSON.stringify(bookings));
 }
 
+function openBooking() {
+  document.getElementById("bookingModal").style.display = "block";
+  loadDrivers();
+}
+
+function closeBooking() {
+  document.getElementById("bookingModal").style.display = "none";
+}
+
+function loadDrivers() {
+  let select = document.getElementById("driverSelect");
+  select.innerHTML = "";
+  drivers.forEach(d => {
+    let option = `<option value="${d.name}">${d.name}</option>`;
+    select.innerHTML += option;
+  });
+}
+
 function calculateFare() {
-  let distance = document.getElementById("distance").value;
-  let fare = (distance * 2.5).toFixed(2); // simple rate
-  document.getElementById("fare").value = "£" + fare;
+  let d = document.getElementById("distance").value;
+  let fare = 5 + (d * 2); // base + per mile
+  document.getElementById("fare").value = "£" + fare.toFixed(2);
 }
 
 function addBooking() {
   let booking = {
     id: Date.now(),
-    name: document.getElementById("name").value,
-    phone: document.getElementById("phone").value,
-    email: document.getElementById("email").value,
-    pickup: document.getElementById("pickup").value,
-    dropoff: document.getElementById("dropoff").value,
-    via: document.getElementById("via").value,
-    fare: document.getElementById("fare").value,
-    date: document.getElementById("date").value,
-    time: document.getElementById("time").value,
+    name: name.value,
+    phone: phone.value,
+    email: email.value,
+    pickup: pickup.value,
+    dropoff: dropoff.value,
+    fare: fare.value,
+    driver: driverSelect.value,
     status: "Pending"
   };
 
   bookings.push(booking);
-  saveData();
-  displayBookings();
+  save();
+  display();
+  closeBooking();
 }
 
-function displayBookings() {
+function display() {
   let table = document.getElementById("bookingTable");
   table.innerHTML = "";
 
   bookings.forEach(b => {
-    let row = `
+    table.innerHTML += `
       <tr>
         <td>${b.name}</td>
         <td>${b.phone}</td>
@@ -43,71 +66,68 @@ function displayBookings() {
         <td>${b.dropoff}</td>
         <td>${b.fare}</td>
         <td>${b.status}</td>
-        <td class="actions">
+        <td>${b.driver}</td>
+        <td>
           <button onclick="dispatch(${b.id})">Dispatch</button>
           <button onclick="complete(${b.id})">Complete</button>
-          <button onclick="deleteBooking(${b.id})">Delete</button>
-          <button onclick="emailQuote(${b.id})">Email</button>
+          <button onclick="remove(${b.id})">Delete</button>
         </td>
       </tr>
     `;
-    table.innerHTML += row;
   });
-}
 
-function deleteBooking(id) {
-  bookings = bookings.filter(b => b.id !== id);
-  saveData();
-  displayBookings();
+  updateDriverPanels();
 }
 
 function dispatch(id) {
-  let booking = bookings.find(b => b.id === id);
-  booking.status = "Dispatched";
-  saveData();
-  displayBookings();
+  let b = bookings.find(x => x.id === id);
+  b.status = "Dispatched";
+  save();
+  display();
 }
 
 function complete(id) {
-  let booking = bookings.find(b => b.id === id);
-  booking.status = "Completed";
-  saveData();
-  displayBookings();
+  let b = bookings.find(x => x.id === id);
+  b.status = "Completed";
+  save();
+  display();
 }
 
-function emailQuote(id) {
-  let b = bookings.find(b => b.id === id);
-
-  let subject = `Taxi Quote for ${b.name}`;
-  let body = `Pickup: ${b.pickup}
-Dropoff: ${b.dropoff}
-Fare: ${b.fare}`;
-
-  window.location.href = `mailto:${b.email}?subject=${subject}&body=${body}`;
+function remove(id) {
+  bookings = bookings.filter(x => x.id !== id);
+  save();
+  display();
 }
 
 function searchCustomer() {
   let phone = document.getElementById("searchPhone").value;
-  let results = bookings.filter(b => b.phone.includes(phone));
+  let filtered = bookings.filter(b => b.phone.includes(phone));
 
   let table = document.getElementById("bookingTable");
   table.innerHTML = "";
 
-  results.forEach(b => {
-    let row = `
-      <tr>
-        <td>${b.name}</td>
-        <td>${b.phone}</td>
-        <td>${b.pickup}</td>
-        <td>${b.dropoff}</td>
-        <td>${b.fare}</td>
-        <td>${b.status}</td>
-        <td></td>
-      </tr>
-    `;
-    table.innerHTML += row;
+  filtered.forEach(b => {
+    table.innerHTML += `<tr>
+      <td>${b.name}</td>
+      <td>${b.phone}</td>
+      <td>${b.pickup}</td>
+      <td>${b.dropoff}</td>
+      <td>${b.fare}</td>
+      <td>${b.status}</td>
+      <td>${b.driver}</td>
+      <td></td>
+    </tr>`;
   });
 }
 
-// Initial load
-displayBookings();
+function updateDriverPanels() {
+  let onboard = document.getElementById("drivers");
+  let available = document.getElementById("availableDrivers");
+  let onjob = document.getElementById("onJobDrivers");
+
+  onboard.innerHTML = drivers.length;
+  available.innerHTML = drivers.filter(d => d.status === "Available").length;
+  onjob.innerHTML = drivers.filter(d => d.status === "On Job").length;
+}
+
+display();
